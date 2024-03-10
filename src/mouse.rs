@@ -3,7 +3,7 @@ use bevy::window::PrimaryWindow;
 
 /// We will store the world position of the mouse cursor here.
 #[derive(Resource, Default)]
-pub struct MyWorldCoords{
+pub struct WorldLastClicked{
     pub value: Vec2
 }
 
@@ -16,7 +16,7 @@ pub struct MainCamera;
 pub struct MousePlugin;
 impl Plugin for MousePlugin {
     fn build(&self, app: &mut App){
-        app.init_resource::<MyWorldCoords>().add_systems(Startup, setup).add_systems(Update, my_cursor_system);
+        app.init_resource::<WorldLastClicked>().add_systems(Startup, setup).add_systems(Update, my_cursor_system);
     }
 }
 
@@ -26,7 +26,7 @@ fn setup(mut commands: Commands){
 
 fn my_cursor_system(
     mouse_button_input: Res<ButtonInput<MouseButton>>,
-    mut mycoords: ResMut<MyWorldCoords>,
+    mut last_clicked_world_coordinates: ResMut<WorldLastClicked>,
     // query to get the window (so we can read the current cursor position)
     q_window: Query<&Window, With<PrimaryWindow>>,
     // query to get camera transform
@@ -47,7 +47,7 @@ fn my_cursor_system(
         .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
         .map(|ray| ray.origin.truncate())
         {
-            mycoords.value = world_position;
+            last_clicked_world_coordinates.value = world_position;
             
         }
     }

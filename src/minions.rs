@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use crate::mouse::MyWorldCoords;
+use crate::mouse::WorldLastClicked;
 
 #[derive(Component)]
 struct Minion {
@@ -21,9 +21,9 @@ fn spawn_minions(mut commands: Commands) {
 }
 
 fn minion_position_system(
-    mycoords:Res<MyWorldCoords>,
+    coords:Res<WorldLastClicked>,
 ){
-    info!("{}", mycoords.value);
+    info!("{}", coords.value);
 
     // get mouse from mouse system
     // Create new pos from entity pos / mouse pos / velocity
