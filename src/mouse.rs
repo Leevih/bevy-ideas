@@ -47,6 +47,7 @@ fn my_cursor_system(
         .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
         .map(|ray| ray.origin.truncate())
         {
+            info!("clicked: {}", last_clicked_world_coordinates.value);
             last_clicked_world_coordinates.value = world_position;
             
         }
