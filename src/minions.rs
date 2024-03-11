@@ -1,31 +1,63 @@
-use bevy::prelude::*;
-use crate::mouse::WorldLastClicked;
+use crate::assetloader::Textures;
+use crate::movement::{Acceleration, MovingObjectBundle, Velocity};
+use bevy::{math::*, prelude::*};
 
-#[derive(Component)]
-struct Minion {
-    velocity: Vec2,
+const STARTING_TRANSLATION: Vec3 = Vec3::new(0.0, 0.0, 0.0);
+
+#[derive(Resource, Debug)]
+pub struct SpawnTimer {
+    timer: Timer,
 }
+
+#[derive(Component, Debug)]
+pub struct Minion;
 
 pub struct MinionPlugin;
 
 impl Plugin for MinionPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, spawn_minions).add_systems(Update, minion_position_system);
+        app.insert_resource(SpawnTimer {
+            timer: Timer::from_seconds(5.0, TimerMode::Repeating),
+        })
+        .add_systems(Update, spawn_minion);
     }
 }
 
-fn spawn_minions(mut commands: Commands) {
-    commands.spawn(Minion {
-        velocity: Vec2::new(0.0, 0.0)
-    });
-}
+fn spawn_minion(
+    mut commands: Commands,
+    mut spawn_timer: ResMut<SpawnTimer>,
+    time: Res<Time>,
+    textures: Res<Textures>,
+) {
+    spawn_timer.timer.tick(time.delta());
+    if !spawn_timer.timer.just_finished() {
+        return;
+    }
 
-fn minion_position_system(
-    coords:Res<WorldLastClicked>,
-){
-    info!("{}", coords.value);
+    let velocity = Vec3::new(1.0, 1.0, 0.0);
+    let acceleration = Vec3::new(1.0, 1.0, 0.0);
 
-    // get mouse from mouse system
-    // Create new pos from entity pos / mouse pos / velocity
-    // apply new Transform::translation
+    commands.spawn((
+        MovingObjectBundle {
+            acceleration: Acceleration::new(acceleration),
+            velocity: Velocity::new(velocity),
+            model: SpriteBundle {
+                transform: Transform {
+                    translation: STARTING_TRANSLATION,
+                    ..Default::default()
+                },
+                sprite: Sprite {
+                    color: Color::rgba(
+                        1.0, 1.0, 1.0,
+                        1.0, // alpha value, you can randomize this too if you want
+                    ),
+                    custom_size: Some(Vec2::new(30.0, 30.0)),
+                    ..Default::default()
+                },
+                texture: textures.minion.clone(),
+                ..Default::default()
+            },
+        },
+        Minion,
+    ));
 }
