@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 
+use crate::mouse::WorldLastClicked;
+
 #[derive(Component, Debug)]
 pub struct Velocity {
     pub value: Vec3,
@@ -43,9 +45,24 @@ fn update_velocity(mut query: Query<(&Acceleration, &mut Velocity)>, time: Res<T
     }
 }
 
-fn update_position(mut query: Query<(&Velocity, &mut Transform)>, time: Res<Time>) {
+fn update_position(
+    mut query: Query<(&Velocity, &mut Transform)>,
+    time: Res<Time>,
+    last_clicked_world_coordinates: Res<WorldLastClicked>,
+) {
     for (velocity, mut transform) in query.iter_mut() {
         info!("{}", velocity.value);
-        transform.translation += velocity.value * time.delta_seconds();
+        let pos = transform.translation;
+        transform.translation += velocity.value
+            * get_direction(pos, last_clicked_world_coordinates.value)
+            * time.delta_seconds();
     }
+}
+
+fn get_direction(position: Vec3, target: Vec3) -> Vec3 {
+    Vec3::new(
+        (position.x - target.x) * -1.0,
+        (position.y - target.y) * -1.0,
+        0.0,
+    )
 }
