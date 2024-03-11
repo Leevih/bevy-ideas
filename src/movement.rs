@@ -51,7 +51,6 @@ fn update_position(
     last_clicked_world_coordinates: Res<WorldLastClicked>,
 ) {
     for (velocity, mut transform) in query.iter_mut() {
-        info!("{}", velocity.value);
         let pos = transform.translation;
         transform.translation += velocity.value
             * get_direction(pos, last_clicked_world_coordinates.value)
