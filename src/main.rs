@@ -10,12 +10,14 @@ mod minions;
 mod mouse;
 mod movement;
 mod pit;
+mod stone;
 
 use assetloader::AssetLoaderPlugin;
 use minions::MinionPlugin;
 use mouse::MousePlugin;
 use movement::MovementPlugin;
 use pit::PitPlugin;
+use stone::StonePlugin;
 
 fn main() {
     App::new()
@@ -27,5 +29,6 @@ fn main() {
         .add_plugins(AssetLoaderPlugin)
         .add_plugins(MousePlugin)
         .add_plugins(MinionPlugin)
+        .add_plugins(StonePlugin)
         .run();
 }
