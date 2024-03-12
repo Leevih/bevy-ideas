@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::mouse::WorldLastClicked;
+use crate::{mouse::WorldLastClicked, pit::Pit};
 
 #[derive(Component, Debug)]
 pub struct Velocity {
@@ -46,7 +46,7 @@ fn update_velocity(mut query: Query<(&Acceleration, &mut Velocity)>, time: Res<T
 }
 
 fn update_position(
-    mut query: Query<(&Velocity, &mut Transform)>,
+    mut query: Query<(&Velocity, &mut Transform), Without<Pit>>,
     time: Res<Time>,
     last_clicked_world_coordinates: Res<WorldLastClicked>,
 ) {

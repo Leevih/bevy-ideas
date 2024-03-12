@@ -3,6 +3,7 @@ use bevy::prelude::*;
 #[derive(Resource, Debug, Default)]
 pub struct Textures {
     pub minion: Handle<Image>,
+    pub pit: Handle<Image>,
 }
 
 pub struct AssetLoaderPlugin;
@@ -17,5 +18,6 @@ impl Plugin for AssetLoaderPlugin {
 fn load_assets(mut textures: ResMut<Textures>, asset_server: Res<AssetServer>) {
     *textures = Textures {
         minion: asset_server.load("circle.png"),
+        pit: asset_server.load("m.png"),
     }
 }
