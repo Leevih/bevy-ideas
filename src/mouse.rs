@@ -7,6 +7,11 @@ pub struct WorldLastClicked {
     pub value: Vec3,
 }
 
+#[derive(Event)]
+pub struct MouseWorldEvent {
+    pub value: Vec3,
+}
+
 /// Used to help identify our main camera
 #[derive(Component)]
 pub struct MainCamera;
@@ -15,6 +20,7 @@ pub struct MousePlugin;
 impl Plugin for MousePlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<WorldLastClicked>()
+            .add_event::<MouseWorldEvent>()
             .add_systems(Startup, setup)
             .add_systems(Update, my_cursor_system);
     }
@@ -31,6 +37,7 @@ fn my_cursor_system(
     q_window: Query<&Window, With<PrimaryWindow>>,
     // query to get camera transform
     q_camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
+    mut writer: EventWriter<MouseWorldEvent>,
 ) {
     if mouse_button_input.just_released(MouseButton::Left) {
         info!("left mouse just released");
@@ -48,9 +55,13 @@ fn my_cursor_system(
             .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
             .map(|ray| ray.origin.truncate())
         {
-            info!("clicked: {}", last_clicked_world_coordinates.value);
-            last_clicked_world_coordinates.value =
-                Vec3::new(world_position.x, world_position.y, 0.0);
+            let _new_value = Vec3::new(world_position.x, world_position.y, 0.0);
+            info!("clicked: {}", _new_value.clone());
+            last_clicked_world_coordinates.value = _new_value.clone();
+
+            writer.send(MouseWorldEvent {
+                value: _new_value.clone(),
+            });
         }
     }
 }

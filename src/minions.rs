@@ -1,6 +1,6 @@
 use crate::assetloader::Textures;
 use crate::movement::{Acceleration, MovingObjectBundle, Velocity};
-use crate::pit::Pit;
+use crate::pit::{Pit, TribeGoal};
 use bevy::{math::*, prelude::*};
 
 const STARTING_TRANSLATION: Vec3 = Vec3::new(0.0, 0.0, 0.0);
@@ -10,8 +10,19 @@ pub struct SpawnTimer {
     timer: Timer,
 }
 
-#[derive(Component, Debug)]
+#[derive(Component)]
+pub struct Inventory {
+    stone: u32,
+}
+
+#[derive(Component)]
 pub struct Minion;
+
+#[derive(Component)]
+pub struct MinionInstructionSet {
+    target: Option<Vec3>,
+}
+#[derive(Component)]
 
 pub struct MinionPlugin;
 
@@ -20,7 +31,28 @@ impl Plugin for MinionPlugin {
         app.insert_resource(SpawnTimer {
             timer: Timer::from_seconds(2.5, TimerMode::Repeating),
         })
-        .add_systems(Update, spawn_minion);
+        .add_systems(Update, spawn_minion)
+        .add_systems(Update, minion_commander);
+    }
+}
+
+// Only deals with GET STONES Instructions
+fn minion_commander(
+    mut minion_query: Query<
+        (&mut Transform, &mut Inventory, &mut MinionInstructionSet),
+        With<Minion>,
+    >,
+    goal: Res<TribeGoal>,
+) {
+    if (goal.value != "GET STONES".to_string()) {
+        return;
+    }
+    for (mut m_transform, mut m_inv, mut m_inst_set) in minion_query.iter_mut() {
+        // Check inventory
+        if (m_inv.stone > 0) {
+            continue;
+        }
+        // Need to find stone.. Maybe need hash map now
     }
 }
 
@@ -60,6 +92,8 @@ fn spawn_minion(
                 ..Default::default()
             },
         },
+        Inventory { stone: 0 },
+        MinionInstructionSet { target: None },
         Minion,
     ));
 }

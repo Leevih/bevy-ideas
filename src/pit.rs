@@ -1,6 +1,6 @@
-use bevy::{math::*, prelude::*};
+use bevy::{math::*, prelude::*, reflect::Enum};
 
-const PIT_TRANSLATION: Vec3 = Vec3::new(0.0, 0.0, 0.0);
+const PIT_TRANSLATION: Vec3 = Vec3::new(700.0, 400.0, 0.0);
 use crate::{
     assetloader::Textures,
     movement::{Acceleration, MovingObjectBundle, Velocity},
@@ -9,11 +9,19 @@ use crate::{
 #[derive(Component)]
 pub struct Pit;
 
+#[derive(Resource)]
+pub struct TribeGoal {
+    pub value: String,
+}
+
 pub struct PitPlugin;
 
 impl Plugin for PitPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup);
+        app.insert_resource(TribeGoal {
+            value: "GET STONES".to_string(),
+        })
+        .add_systems(Startup, setup);
     }
 }
 
