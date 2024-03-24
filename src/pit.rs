@@ -1,10 +1,16 @@
-use bevy::{math::*, prelude::*, reflect::Enum};
+use bevy::{math::*, prelude::*};
 
 const PIT_TRANSLATION: Vec3 = Vec3::new(700.0, 400.0, 0.0);
 use crate::{
     assetloader::Textures,
     movement::{Acceleration, MovingObjectBundle, Velocity},
+    space::AddSpatialEntity,
 };
+
+#[derive(Resource)]
+pub struct TribeStoneQue {
+    pub value: Vec<Vec3>,
+}
 
 #[derive(Component)]
 pub struct Pit;
@@ -21,7 +27,21 @@ impl Plugin for PitPlugin {
         app.insert_resource(TribeGoal {
             value: "GET STONES".to_string(),
         })
-        .add_systems(Startup, setup);
+        .insert_resource(TribeStoneQue { value: vec![] })
+        .add_systems(Startup, setup)
+        .add_systems(Update, pit_logic_function);
+    }
+}
+
+fn pit_logic_function(
+    mut commands: Commands,
+    mut space_update_receiver: EventReader<AddSpatialEntity>,
+    mut stone_que: ResMut<TribeStoneQue>,
+) {
+    for event in space_update_receiver.read() {
+        info!("{}", event.value);
+        stone_que.value.push(event.value);
+        info!("{}", stone_que.value[0]);
     }
 }
 

@@ -1,6 +1,13 @@
 use bevy::prelude::*;
 
-use crate::{minions::Minion, mouse::WorldLastClicked, pit::Pit};
+use crate::{
+    minions::{Minion, MinionInstructionSet},
+    mouse::WorldLastClicked,
+    pit::Pit,
+    space::{map_vec3_hash, SpaceMap},
+    stone::Stone,
+    MinionUpdateSet,
+};
 
 #[derive(Component, Debug)]
 pub struct Velocity {
@@ -35,7 +42,11 @@ pub struct MovementPlugin;
 
 impl Plugin for MovementPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, (update_velocity, update_position).chain());
+        app.add_systems(
+            Update,
+            ((update_velocity, update_position).chain())
+                .in_set(MinionUpdateSet::PostDecisionMaking),
+        );
     }
 }
 
@@ -46,15 +57,32 @@ fn update_velocity(mut query: Query<(&Acceleration, &mut Velocity)>, time: Res<T
 }
 
 fn update_position(
-    mut query: Query<(&Velocity, &mut Transform), With<Minion>>,
+    mut minion_query: Query<
+        (&Velocity, &mut Transform, &Minion, &MinionInstructionSet),
+        (With<Minion>, Without<Stone>),
+    >,
+    mut stone_query: Query<&Transform, (Without<Minion>, With<Stone>)>,
     time: Res<Time>,
     last_clicked_world_coordinates: Res<WorldLastClicked>,
+    space_map: Res<SpaceMap>,
 ) {
-    for (velocity, mut transform) in query.iter_mut() {
-        let pos = transform.translation;
-        transform.translation += velocity.value
-            * get_direction(pos, last_clicked_world_coordinates.value)
-            * time.delta_seconds();
+    //space_map.value[0];
+    //    let index = (transform.translation.x as usize) * 1920 + (transform.translation.y as usize);
+
+    for (velocity, mut transform, minion, mis) in minion_query.iter_mut() {
+        /*  println!(
+            "{:?}",
+            space_map.value.get(&map_vec3_hash(&transform.translation))
+        ); */
+        match mis.target {
+            None => continue,
+            Some(val) => {
+                let pos = transform.translation;
+
+                transform.translation +=
+                    velocity.value * get_direction(pos, val) * time.delta_seconds();
+            }
+        }
     }
 }
 

@@ -1,6 +1,9 @@
 use crate::assetloader::Textures;
 use crate::movement::{Acceleration, MovingObjectBundle, Velocity};
-use crate::pit::{Pit, TribeGoal};
+use crate::pit::{Pit, TribeGoal, TribeStoneQue};
+use crate::stone::DestroyStone;
+use crate::MinionUpdateSet;
+
 use bevy::{math::*, prelude::*};
 
 const STARTING_TRANSLATION: Vec3 = Vec3::new(0.0, 0.0, 0.0);
@@ -12,7 +15,7 @@ pub struct SpawnTimer {
 
 #[derive(Component)]
 pub struct Inventory {
-    stone: u32,
+    stone: u16,
 }
 
 #[derive(Component)]
@@ -20,7 +23,8 @@ pub struct Minion;
 
 #[derive(Component)]
 pub struct MinionInstructionSet {
-    target: Option<Vec3>,
+    //status: String,
+    pub target: Option<Vec3>,
 }
 #[derive(Component)]
 
@@ -32,27 +36,41 @@ impl Plugin for MinionPlugin {
             timer: Timer::from_seconds(2.5, TimerMode::Repeating),
         })
         .add_systems(Update, spawn_minion)
-        .add_systems(Update, minion_commander);
+        .add_systems(
+            Update,
+            vague_minion_idiot_logic.in_set(MinionUpdateSet::PreDecisionMaking),
+        );
     }
 }
 
 // Only deals with GET STONES Instructions
-fn minion_commander(
-    mut minion_query: Query<
-        (&mut Transform, &mut Inventory, &mut MinionInstructionSet),
-        With<Minion>,
-    >,
+fn vague_minion_idiot_logic(
+    mut minion_query: Query<(&mut Inventory, &mut MinionInstructionSet, &Transform), With<Minion>>,
+    pit_query: Query<&Transform, With<Pit>>,
     goal: Res<TribeGoal>,
+    mut stone_que: ResMut<TribeStoneQue>,
+    mut stone_destroy_writer: EventWriter<DestroyStone>,
 ) {
-    if (goal.value != "GET STONES".to_string()) {
-        return;
-    }
-    for (mut m_transform, mut m_inv, mut m_inst_set) in minion_query.iter_mut() {
+    let mut pit_t = pit_query.single();
+    for (mut m_inv, mut m_inst_set, m_t) in minion_query.iter_mut() {
         // Check inventory
+
         if (m_inv.stone > 0) {
+            // this minion has stone, going back to pit
+            m_inst_set.target = Some(pit_t.translation); //pit_t.translation.clone();
             continue;
         }
-        // Need to find stone.. Maybe need hash map now
+        // Check the latest stone from pit
+        let next_stone_pos = stone_que.value.clone().into_iter().nth(0);
+
+        if m_t.translation.x == next_stone_pos.unwrap().x
+            && m_t.translation.y == next_stone_pos.unwrap().y
+        {
+            m_inv.stone + 1;
+
+            print!("found");
+        }
+        m_inst_set.target = next_stone_pos;
     }
 }
 
